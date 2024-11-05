@@ -1,4 +1,4 @@
-package com.example.myapplication.recycler
+package com.example.myapplication.ui.joke_list.recycler
 
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.data.Joke

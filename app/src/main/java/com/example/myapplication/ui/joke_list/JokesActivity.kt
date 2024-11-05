@@ -1,18 +1,19 @@
-package com.example.myapplication
+package com.example.myapplication.ui.joke_list
 
 import android.os.Bundle
-import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import com.example.myapplication.data.Joke
 import com.example.myapplication.data.JokeGenerator
 import com.example.myapplication.databinding.ActivityJokesBinding
-import com.example.myapplication.recycler.JokeAdapter
+import com.example.myapplication.ui.joke_details.JokeDetailsActivity
+import com.example.myapplication.ui.joke_list.recycler.JokeAdapter
 
 class JokesActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityJokesBinding
-    private val adapter = JokeAdapter()
-    private val jokeGenerator = JokeGenerator()
+    private val adapter = JokeAdapter {
+        startActivity(JokeDetailsActivity.getInstance(this, it))
+    }
+    private val jokeGenerator = JokeGenerator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

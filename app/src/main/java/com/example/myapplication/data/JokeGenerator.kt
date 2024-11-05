@@ -1,6 +1,8 @@
 package com.example.myapplication.data
 
-class JokeGenerator {
+object JokeGenerator {
+
+    val data = mutableListOf<Joke>()
 
     private val jokeSet = mutableSetOf(
         Joke("Какая самая дорогая чашка кофе?",
@@ -45,16 +47,18 @@ class JokeGenerator {
         ),
     )
 
-    fun generateRandomJoke(): Joke {
+    private fun generateRandomJoke(): Joke {
         return jokeSet.random()
     }
 
     fun generateJokesList(size: Int): MutableList<Joke> {
+        data.clear()
         var jokes = mutableListOf<Joke>()
         for (i in 1..size) {
             jokes.add(generateRandomJoke())
         }
-        return jokes
+        data.addAll(jokes)
+        return data
     }
 
 }
