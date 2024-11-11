@@ -1,16 +1,15 @@
-package com.example.myapplication.ui.joke_list.recycler
+package com.example.myapplication.ui.joke_list.recycler.JokeAdapters
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.data.Joke
 import com.example.myapplication.databinding.JokeItemBinding
+import com.example.myapplication.ui.joke_list.recycler.JokeViewHolder
 import com.example.myapplication.ui.joke_list.recycler.Util.JokeDiffUtilCallback
 
-class JokeAdapter(
+class JokeAdapterForActivity(
     private val clickListner: (Int) -> Unit,
 ): RecyclerView.Adapter<JokeViewHolder>() {
 

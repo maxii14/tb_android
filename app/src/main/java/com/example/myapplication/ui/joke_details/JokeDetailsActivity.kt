@@ -11,11 +11,11 @@ import com.example.myapplication.data.JokeGenerator
 import com.example.myapplication.databinding.ActivityJokeDetailsBinding
 import com.example.myapplication.databinding.ActivityJokesBinding
 
-class JokeDetailsActivity : AppCompatActivity() {
+class JokeDetailsActivity : AppCompatActivity(), JokeDetailsView {
 
     private var jokePosition: Int = -1
     private lateinit var binding: ActivityJokeDetailsBinding
-    private val generator = JokeGenerator
+    private lateinit var presenter: JokeDetailsPresenter
 
     companion object {
         private const val JOKE_POSITION_EXTRA = "JOKE_POSITION"
@@ -30,36 +30,26 @@ class JokeDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityJokeDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        presenter = JokeDetailsPresenter(this)
         handleExtra()
     }
 
     private fun handleExtra() {
         jokePosition = intent.getIntExtra(JOKE_POSITION_EXTRA, -1)
-
-        if (jokePosition == -1) {
-            handleError()
-        } else {
-            val item = generator.data[jokePosition]
-            println(item)
-            if (item != null) {
-                setupJokeData(item)
-            } else {
-                handleError()
-            }
-        }
+        presenter.loadJokeDetails(jokePosition)
     }
 
-    private fun handleError() {
-        Toast.makeText(this, "Произошла ошибка", Toast.LENGTH_SHORT).show()
-        finish()
-    }
 
-    private fun setupJokeData(joke: Joke) {
+    override fun showJokeInfo(joke: Joke) {
         with(binding) {
             jokeTitle.text = "${joke.title}"
             jokeCategory.text = "${joke.catogory}"
             jokeText.text = "Шутка: ${joke.answer}"
         }
+    }
+
+    override fun showError(error: String) {
+        Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+        finish()
     }
 }
