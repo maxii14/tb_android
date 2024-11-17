@@ -7,19 +7,22 @@
     android:layout_height="match_parent"
     tools:context=".ui.joke_list.JokesActivity">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rw"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_container_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/joke_item">
+        android:layout_height="match_parent" />
 
-
-
-    </androidx.recyclerview.widget.RecyclerView>
+<!--    Если нужно протестировать activity с MVP-->
+<!--    <androidx.recyclerview.widget.RecyclerView-->
+<!--        android:id="@+id/rw"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"-->
+<!--        tools:listitem="@layout/joke_item">-->
+<!--    </androidx.recyclerview.widget.RecyclerView>-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
