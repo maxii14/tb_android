@@ -30,6 +30,8 @@ class JokesFragment : Fragment() {
             param2 = it.getString(ARG_PARAM2)
             param3 = it.getString(ARG_PARAM3)
         }
+
+
     }
 
     override fun onCreateView(

@@ -5,12 +5,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.replace
+import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.example.myapplication.R
 import com.example.myapplication.data.JokeGenerator
 import com.example.myapplication.databinding.FragmentJokesListBinding
 import com.example.myapplication.ui.joke_list.recycler.JokeAdapters.JokeAdapterForFragment
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 
 class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
@@ -31,7 +39,12 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        createRWList(7)
+
+        getAndPushDataToRecycler()
+        
+        bindingFragmentList.btAddJoke.setOnClickListener {
+            openFragment()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,8 +72,25 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
             }
     }
 
-    private fun createRWList(jokesCount: Int) {
-        bindingFragmentList.rw.adapter = adapter
-        adapter.setNewData(jokeGenerator.generateJokesList(jokesCount))
+    private fun getAndPushDataToRecycler() {
+        lifecycleScope.launch {
+            bindingFragmentList.rw.adapter = adapter
+            val jokes = jokeGenerator.getJokes()
+            delay(2000L) // Строчка выше получает данные из БД
+            if (jokes.size == 0) {
+                bindingFragmentList.tvNoJokes.visibility = View.VISIBLE
+            } else {
+                bindingFragmentList.tvNoJokes.visibility = View.GONE
+                adapter.setNewData(jokes)
+            }
+            bindingFragmentList.progressBar.visibility = ProgressBar.GONE
+        }
+    }
+
+    private fun openFragment() {
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container_view, AddJokeFragment.newInstance())
+            .addToBackStack(null)
+            .commit()
     }
 }
