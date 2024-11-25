@@ -36,7 +36,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/bt_add_joke"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/rw"
             android:visibility="gone"
             android:text="А где шутки? А нет шуток."/>
 
@@ -44,10 +43,11 @@
             android:id="@+id/rw"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_no_jokes"
+            app:layout_constraintTop_toBottomOf="@id/bt_add_joke"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="35dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:listitem="@layout/joke_item">
         </androidx.recyclerview.widget.RecyclerView>

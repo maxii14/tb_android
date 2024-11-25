@@ -43,12 +43,26 @@
         android:maxEms="15"
         tools:text="Внимание! Шутка: ..." />
 
+    <TextView
+        android:id="@+id/isFromApi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:textColor="#000"
+        android:textSize="10sp"
+        app:layout_constraintStart_toStartOf="@+id/jokeTitle"
+        app:layout_constraintTop_toBottomOf="@+id/jokeText"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:maxEms="15"
+        tools:text="Из сети: нет" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#c7c7c7"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/jokeText"
+        app:layout_constraintTop_toBottomOf="@id/isFromApi"
         android:layout_marginTop="5dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

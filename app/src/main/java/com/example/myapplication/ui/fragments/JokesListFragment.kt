@@ -1,24 +1,22 @@
 package com.example.myapplication.ui.fragments
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.replace
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.example.myapplication.R
+import com.example.myapplication.data.Joke
 import com.example.myapplication.data.JokeGenerator
 import com.example.myapplication.databinding.FragmentJokesListBinding
 import com.example.myapplication.ui.joke_list.recycler.JokeAdapters.JokeAdapterForFragment
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 
 class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
@@ -28,7 +26,7 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
         requireActivity().supportFragmentManager.beginTransaction()
             .replace(
                 R.id.fragment_container_view,
-                JokesFragment.newInstance(joke.title, joke.catogory, joke.answer)
+                JokesFragment.newInstance(joke.title, joke.category, joke.answer, "Из сети: ${if (joke.fromApi) "да" else "нет"}")
             )
             .addToBackStack(null)
             .commit()
@@ -45,6 +43,24 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
         bindingFragmentList.btAddJoke.setOnClickListener {
             openFragment()
         }
+        bindingFragmentList.rw.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                if (!recyclerView.canScrollVertically(3)) {
+                    lifecycleScope.launch {
+                        bindingFragmentList.progressBar.visibility = ProgressBar.VISIBLE
+                        jokeGenerator.loadMoreApiJokes()
+                        val jokes = mutableListOf<Joke>()
+                        jokes.addAll(jokeGenerator.getCustomJokes())
+                        jokes.addAll(jokeGenerator.getInitialApiJokes())
+                        adapter.setNewData(jokes)
+                        bindingFragmentList.progressBar.visibility = ProgressBar.GONE
+                    }
+                }
+            }
+        })
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,9 +91,12 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
     private fun getAndPushDataToRecycler() {
         lifecycleScope.launch {
             bindingFragmentList.rw.adapter = adapter
-            val jokes = jokeGenerator.getJokes()
-            delay(2000L) // Строчка выше получает данные из БД
-            if (jokes.size == 0) {
+
+            val jokes = mutableListOf<Joke>()
+            jokes.addAll(jokeGenerator.getCustomJokes())
+            jokes.addAll(jokeGenerator.getInitialApiJokes())
+
+            if (jokes.isEmpty()) {
                 bindingFragmentList.tvNoJokes.visibility = View.VISIBLE
             } else {
                 bindingFragmentList.tvNoJokes.visibility = View.GONE
