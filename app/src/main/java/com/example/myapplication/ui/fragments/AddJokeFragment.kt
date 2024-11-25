@@ -56,7 +56,7 @@ class AddJokeFragment : Fragment() {
                 Toast.makeText(requireActivity(), "Заполните все поля", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            jokeGenerator.addJoke(Joke(UUID.randomUUID().toString(), title, category, answer))
+            jokeGenerator.addJoke(Joke(UUID.randomUUID().toString(), title, category, answer, false))
             Toast.makeText(requireActivity(), "Шутка добавлена", Toast.LENGTH_SHORT).show()
             requireActivity().supportFragmentManager.popBackStack()
         }

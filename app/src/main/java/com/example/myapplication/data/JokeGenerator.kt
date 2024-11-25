@@ -1,9 +1,11 @@
 package com.example.myapplication.data
 
+import com.example.myapplication.data.api.RetrofitInstance
+
 object JokeGenerator {
 
     val data = mutableListOf<Joke>()
-    val runtimeData = mutableListOf<Joke>()
+    private val runtimeData = mutableListOf<Joke>()
 
     private val jokeSet = mutableSetOf(
         Joke("1", "Какая самая дорогая чашка кофе?",
@@ -48,10 +50,6 @@ object JokeGenerator {
         ),
     )
 
-    private fun generateRandomJoke(): Joke {
-        return jokeSet.random()
-    }
-
     fun generateJokesList(size: Int): MutableList<Joke> {
         data.clear()
         var jokes = mutableListOf<Joke>()
@@ -62,12 +60,32 @@ object JokeGenerator {
         return data
     }
 
-    fun getJokes(): MutableList<Joke> {
+    suspend fun getInitialApiJokes(): MutableList<Joke> {
+        if (runtimeData.isEmpty()) {
+            runtimeData.addAll(loadJokes(10))
+        }
+
         return runtimeData
     }
 
+    suspend fun loadMoreApiJokes() {
+        runtimeData.addAll(loadJokes(10))
+    }
+
+    fun getCustomJokes(): MutableList<Joke> {
+        return data
+    }
+
     fun addJoke(joke: Joke) {
-        runtimeData.add(joke)
+        data.add(joke)
+    }
+
+    private suspend fun loadJokes(count: Int): List<Joke> {
+        return RetrofitInstance.api.getRandomJokes(amount = count).jokes
+    }
+
+    private fun generateRandomJoke(): Joke {
+        return jokeSet.random()
     }
 
 }

@@ -14,12 +14,14 @@ import com.example.myapplication.databinding.FragmentJokesListBinding
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 private const val ARG_PARAM3 = "param3"
+private const val ARG_PARAM4 = "param4"
 
 class JokesFragment : Fragment() {
 
     private var param1: String? = null
     private var param2: String? = null
     private var param3: String? = null
+    private var param4: String? = null
 
     private val bindingFragment: FragmentJokesBinding by viewBinding(FragmentJokesBinding::bind)
 
@@ -29,6 +31,7 @@ class JokesFragment : Fragment() {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
             param3 = it.getString(ARG_PARAM3)
+            param4 = it.getString(ARG_PARAM4)
         }
 
 
@@ -47,15 +50,17 @@ class JokesFragment : Fragment() {
         bindingFragment.jokeTitle.text = param1
         bindingFragment.jokeCategory.text = param2
         bindingFragment.jokeText.text = param3
+        bindingFragment.isFromApi.text = param4
     }
 
     companion object {
-        fun newInstance(param1: String, param2: String, param3: String) =
+        fun newInstance(param1: String, param2: String, param3: String, param4: String) =
             JokesFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_PARAM1, param1)
                     putString(ARG_PARAM2, param2)
                     putString(ARG_PARAM3, param3)
+                    putString(ARG_PARAM4, param4)
                 }
             }
     }
