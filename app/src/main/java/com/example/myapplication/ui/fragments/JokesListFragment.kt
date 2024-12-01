@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
@@ -17,10 +18,12 @@ import com.example.myapplication.data.JokeGenerator
 import com.example.myapplication.databinding.FragmentJokesListBinding
 import com.example.myapplication.ui.joke_list.recycler.JokeAdapters.JokeAdapterForFragment
 import kotlinx.coroutines.launch
+import java.net.InetAddress
 
 
 class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
 
+    private var coroutineIsRunning = false
 
     private val adapter = JokeAdapterForFragment { _, joke ->
         requireActivity().supportFragmentManager.beginTransaction()
@@ -32,8 +35,8 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
             .commit()
     }
     private val jokeGenerator = JokeGenerator
-
     private val bindingFragmentList: FragmentJokesListBinding by viewBinding(FragmentJokesListBinding::bind)
+    private val LOAD_WHEN_LEFT = 1
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -48,15 +51,19 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
-                if (!recyclerView.canScrollVertically(3)) {
-                    lifecycleScope.launch {
-                        bindingFragmentList.progressBar.visibility = ProgressBar.VISIBLE
-                        jokeGenerator.loadMoreApiJokes()
-                        val jokes = mutableListOf<Joke>()
-                        jokes.addAll(jokeGenerator.getCustomJokes())
-                        jokes.addAll(jokeGenerator.getInitialApiJokes())
-                        adapter.setNewData(jokes)
-                        bindingFragmentList.progressBar.visibility = ProgressBar.GONE
+                if (!recyclerView.canScrollVertically(LOAD_WHEN_LEFT)) {
+                    if (!coroutineIsRunning && isInternetAvailable()) {
+                        lifecycleScope.launch {
+                            coroutineIsRunning = true
+                            bindingFragmentList.progressBar.visibility = ProgressBar.VISIBLE
+                            jokeGenerator.loadMoreApiJokes()
+                            val jokes = mutableListOf<Joke>()
+                            jokes.addAll(jokeGenerator.getCustomJokes())
+                            jokes.addAll(jokeGenerator.getInitialApiJokes())
+                            adapter.setNewData(jokes)
+                            bindingFragmentList.progressBar.visibility = ProgressBar.GONE
+                            coroutineIsRunning = false
+                        }
                     }
                 }
             }
@@ -90,9 +97,11 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
 
     private fun getAndPushDataToRecycler() {
         lifecycleScope.launch {
+            bindingFragmentList.progressBar.visibility = ProgressBar.VISIBLE
             bindingFragmentList.rw.adapter = adapter
 
             val jokes = mutableListOf<Joke>()
+
             jokes.addAll(jokeGenerator.getCustomJokes())
             jokes.addAll(jokeGenerator.getInitialApiJokes())
 
@@ -102,6 +111,7 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
                 bindingFragmentList.tvNoJokes.visibility = View.GONE
                 adapter.setNewData(jokes)
             }
+
             bindingFragmentList.progressBar.visibility = ProgressBar.GONE
         }
     }
@@ -111,5 +121,9 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
             .replace(R.id.fragment_container_view, AddJokeFragment.newInstance())
             .addToBackStack(null)
             .commit()
+    }
+
+    private fun isInternetAvailable(): Boolean {
+        return Runtime.getRuntime().exec("ping -c 1 google.com").waitFor() == 0
     }
 }

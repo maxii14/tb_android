@@ -61,7 +61,7 @@ object JokeGenerator {
     }
 
     suspend fun getInitialApiJokes(): MutableList<Joke> {
-        if (runtimeData.isEmpty()) {
+        if (runtimeData.isEmpty() && isInternetAvailable()) {
             runtimeData.addAll(loadJokes(10))
         }
 
@@ -86,6 +86,10 @@ object JokeGenerator {
 
     private fun generateRandomJoke(): Joke {
         return jokeSet.random()
+    }
+
+    private fun isInternetAvailable(): Boolean {
+        return Runtime.getRuntime().exec("ping -c 1 google.com").waitFor() == 0
     }
 
 }
