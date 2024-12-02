@@ -1,17 +1,16 @@
-package com.example.myapplication.ui.joke_list.recycler
+package com.example.myapplication.ui.joke_list.recycler.JokeAdapters
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.data.Joke
 import com.example.myapplication.databinding.JokeItemBinding
+import com.example.myapplication.ui.joke_list.recycler.JokeViewHolder
 import com.example.myapplication.ui.joke_list.recycler.Util.JokeDiffUtilCallback
 
-class JokeAdapter(
-    private val clickListner: (Int) -> Unit,
+class JokeAdapterForFragment(
+    private val clickListner: (Int, Joke) -> Unit,
 ): RecyclerView.Adapter<JokeViewHolder>() {
 
     private var data = emptyList<Joke>()
@@ -42,8 +41,8 @@ class JokeAdapter(
 
     private fun handleJokeClick(position: Int) {
         if (position != RecyclerView.NO_POSITION) {
-            (data[position] as? Joke)?.let {
-                clickListner(position)
+            (data[position] as? Joke)?.let { joke ->
+                clickListner(position, joke)
             }
         }
     }
