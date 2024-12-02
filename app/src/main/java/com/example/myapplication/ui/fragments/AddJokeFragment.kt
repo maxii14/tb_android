@@ -11,7 +11,6 @@ import com.example.myapplication.R
 import com.example.myapplication.data.Joke
 import com.example.myapplication.data.JokeGenerator
 import com.example.myapplication.databinding.FragmentAddJokeBinding
-import com.example.myapplication.databinding.FragmentJokesBinding
 import java.util.UUID
 
 
@@ -27,6 +26,7 @@ class AddJokeFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
@@ -56,7 +56,8 @@ class AddJokeFragment : Fragment() {
                 Toast.makeText(requireActivity(), "Заполните все поля", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            jokeGenerator.addJoke(Joke(UUID.randomUUID().toString(), title, category, answer, false))
+            val joke = Joke(UUID.randomUUID().toString(), title, category, answer, false)
+            jokeGenerator.addCustomJoke(joke)
             Toast.makeText(requireActivity(), "Шутка добавлена", Toast.LENGTH_SHORT).show()
             requireActivity().supportFragmentManager.popBackStack()
         }

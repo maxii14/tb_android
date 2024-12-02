@@ -6,8 +6,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-@Entity(tableName = "jokes")
-data class Joke (
+@Entity(tableName = "j_cache")
+data class CachedJoke (
     @SerialName("id")
     @PrimaryKey
     val id: String,
@@ -17,5 +17,6 @@ data class Joke (
     var category: String,
     @SerialName("delivery")
     var answer: String,
-    var fromApi: Boolean = true
+    var fromApi: Boolean = true,
+    var timeCreated: Long
 )

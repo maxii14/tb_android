@@ -1,11 +1,34 @@
 package com.example.myapplication.data
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.myapplication.data.api.RetrofitInstance
+import com.example.myapplication.data.db.AppDB
+import com.example.myapplication.data.db.repo.CachedJokesRepository
+import com.example.myapplication.data.db.repo.CustomJokesRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-object JokeGenerator {
+object JokeGenerator : ViewModel() {
 
     val data = mutableListOf<Joke>()
     private val runtimeData = mutableListOf<Joke>()
+
+    private val cachedJokesRepository: CachedJokesRepository by lazy {
+        CachedJokesRepository(
+            AppDB.INSTANCE.cachedJokeDao()
+        )
+    }
+    private val customJokesRepository: CustomJokesRepository by lazy {
+        CustomJokesRepository(
+            AppDB.INSTANCE.jokeDao()
+        )
+    }
+    private val _customJokesFlow = MutableStateFlow<List<Joke>>(emptyList())
+    val customJokesFlow: StateFlow<List<Joke>> get() = _customJokesFlow
+    private val _cachedJokesFlow = MutableStateFlow<List<Joke>>(emptyList())
+    val cachedJokesFlow: StateFlow<List<Joke>> get() = _cachedJokesFlow
 
     private val jokeSet = mutableSetOf(
         Joke("1", "Какая самая дорогая чашка кофе?",
@@ -50,46 +73,83 @@ object JokeGenerator {
         ),
     )
 
-    fun generateJokesList(size: Int): MutableList<Joke> {
-        data.clear()
-        var jokes = mutableListOf<Joke>()
-        for (i in 1..size) {
-            jokes.add(generateRandomJoke())
-        }
-        data.addAll(jokes)
-        return data
-    }
-
     suspend fun getInitialApiJokes(): MutableList<Joke> {
         if (runtimeData.isEmpty() && isInternetAvailable()) {
-            runtimeData.addAll(loadJokes(10))
+            runtimeData.addAll(loadJokesFromNetwork(10))
         }
 
         return runtimeData
     }
 
     suspend fun loadMoreApiJokes() {
-        runtimeData.addAll(loadJokes(10))
+        runtimeData.addAll(loadJokesFromNetwork(10))
     }
 
     fun getCustomJokes(): MutableList<Joke> {
         return data
     }
 
-    fun addJoke(joke: Joke) {
+    fun addCustomJoke(joke: Joke) {
         data.add(joke)
+        viewModelScope.launch {
+            customJokesRepository.addJoke(joke)
+        }
     }
 
-    private suspend fun loadJokes(count: Int): List<Joke> {
+    fun addJokesToCache(jokes: List<Joke>) {
+        val cachedJokes = convertToDatabaseJokes(jokes)
+        viewModelScope.launch {
+            cachedJokesRepository.addJokesToCache(cachedJokes)
+        }
+    }
+
+    private suspend fun loadJokesFromNetwork(count: Int): List<Joke> {
         return RetrofitInstance.api.getRandomJokes(amount = count).jokes
-    }
-
-    private fun generateRandomJoke(): Joke {
-        return jokeSet.random()
     }
 
     private fun isInternetAvailable(): Boolean {
         return Runtime.getRuntime().exec("ping -c 1 google.com").waitFor() == 0
     }
 
+    fun loadAllCustomJokes() {
+        viewModelScope.launch {
+            customJokesRepository.getAllJokes().collect {
+                _customJokesFlow.value = it
+            }
+        }
+    }
+
+    fun loadAllCachedJokes() {
+        viewModelScope.launch {
+            cachedJokesRepository.clearOldCache()
+            cachedJokesRepository.getAllCachedJokes().collect {
+                _cachedJokesFlow.value = convertToAppJokes(it)
+            }
+        }
+    }
+
+    private fun convertToDatabaseJokes(jokes: List<Joke>): List<CachedJoke> {
+        return jokes.map { joke ->
+            CachedJoke(
+                id = joke.id,
+                title = joke.title,
+                category = joke.category,
+                answer = joke.answer,
+                fromApi = joke.fromApi,
+                timeCreated = System.currentTimeMillis()
+            )
+        }
+    }
+
+    private fun convertToAppJokes(jokes: List<CachedJoke>): List<Joke> {
+        return jokes.map { joke ->
+            Joke(
+                id = joke.id,
+                title = joke.title,
+                category = joke.category,
+                answer = joke.answer,
+                fromApi = joke.fromApi,
+            )
+        }
+    }
 }
