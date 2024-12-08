@@ -10,7 +10,9 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.example.myapplication.R
@@ -18,13 +20,13 @@ import com.example.myapplication.data.Joke
 import com.example.myapplication.data.JokeGenerator
 import com.example.myapplication.databinding.FragmentJokesListBinding
 import com.example.myapplication.ui.joke_list.recycler.JokeAdapters.JokeAdapterForFragment
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.flow.toCollection
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import okhttp3.internal.wait
 
 
 class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
@@ -43,12 +45,13 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
     //lateinit var jokeGenerator: JokeGenerator
     private val jokeGenerator: JokeGenerator by viewModels()
     private val bindingFragmentList: FragmentJokesListBinding by viewBinding(FragmentJokesListBinding::bind)
-    private val LOAD_WHEN_LEFT = 1
+    private val DIRECTION_UP = 1
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         //jokeGenerator = ViewModelProvider(this)[JokeGenerator::class.java]
+        //clearCustomAndCachedJokes()
         initListeners()
         getAndPushDataToRecycler()
     }
@@ -78,21 +81,42 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
             }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getAndPushDataToRecycler() {
         lifecycleScope.launch {
             bindingFragmentList.progressBar.visibility = ProgressBar.VISIBLE
             bindingFragmentList.rw.adapter = adapter
 
-            jokeGenerator.loadAllCustomJokes()
-            jokeGenerator.loadAllCachedJokes()
-            jokeGenerator.customJokesFlow.collect { customJokes ->
-                val jokesList = mutableListOf<Joke>()
-                jokesList.addAll(customJokes)
-                jokesList.addAll(getApiOrCachedJokes())
+            // изменяем внутреннее состояние StateFlow и ждём завершения
+            val loadedJokes = listOf(
+                launch { jokeGenerator.loadAllCustomJokes() },
+                launch { jokeGenerator.loadAllCachedJokes() }
+            )
+            loadedJokes.joinAll()
+
+            // комбинируем, чтобы получить и отобразить данные из 2х таблиц
+            combine(
+                jokeGenerator.customJokesFlow,
+                jokeGenerator.cachedJokesFlow
+            ) { customJokes, cachedJokes ->
+                customJokes to cachedJokes
+            }.flatMapLatest { (customJokes, cachedJokes) ->
+                val apiJokes = getApiJokes()
+                if (apiJokes.isEmpty()) {
+                    Toast.makeText(requireActivity(), "Данные из кэша, нет подключения к сети.", Toast.LENGTH_SHORT).show()
+                    flowOf(customJokes + cachedJokes)
+                }
+                else {
+                    flowOf(customJokes + apiJokes)
+                }
+            }.collect { jokesList ->
+                println("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
                 if (jokesList.isEmpty()) {
-                    Toast.makeText(requireActivity(), "Кэш пуст.", Toast.LENGTH_SHORT).show()
                     bindingFragmentList.tvNoJokes.visibility = View.VISIBLE
                 } else {
+                    if (jokesList.filter { it.fromApi }.isEmpty()) {
+                        Toast.makeText(requireActivity(), "Кэш пуст.", Toast.LENGTH_SHORT).show()
+                    }
                     bindingFragmentList.tvNoJokes.visibility = View.GONE
                     adapter.setNewData(jokesList)
                 }
@@ -112,18 +136,6 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
         return Runtime.getRuntime().exec("ping -c 1 google.com").waitFor() == 0
     }
 
-    private suspend fun getApiOrCachedJokes(): List<Joke> {
-        if (isInternetAvailable()) {
-            val apiJokes: List<Joke> = jokeGenerator.getInitialApiJokes()
-            jokeGenerator.addJokesToCache(apiJokes)
-            return apiJokes
-        }
-        else {
-            Toast.makeText(requireActivity(), "Данные из кэша, нет подключения к сети.", Toast.LENGTH_SHORT).show()
-            return jokeGenerator.cachedJokesFlow.value
-        }
-    }
-
     private fun initListeners() {
         bindingFragmentList.btAddJoke.setOnClickListener {
             openFragment()
@@ -134,18 +146,26 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
-                if (!recyclerView.canScrollVertically(LOAD_WHEN_LEFT) && isInternetAvailable()) {
+                if (!recyclerView.canScrollVertically(DIRECTION_UP) && isInternetAvailable()) {
                     if (!coroutineIsRunning) {
-                        lifecycleScope.launch {
-                            coroutineIsRunning = true
-                            bindingFragmentList.progressBar.visibility = ProgressBar.VISIBLE
-                            jokeGenerator.loadMoreApiJokes()
-                            val jokes = mutableListOf<Joke>()
-                            val apiJokes: List<Joke> = jokeGenerator.getInitialApiJokes()
-                            jokeGenerator.addJokesToCache(apiJokes)
-                            jokes.addAll(jokeGenerator.customJokesFlow.value)
-                            jokes.addAll(apiJokes)
-                            adapter.setNewData(jokes)
+                        try {
+                            lifecycleScope.launch {
+                                coroutineIsRunning = true
+                                bindingFragmentList.progressBar.visibility = ProgressBar.VISIBLE
+                                jokeGenerator.loadMoreApiJokes()
+                                val jokes = mutableListOf<Joke>()
+                                val apiJokes: List<Joke> = jokeGenerator.getInitialApiJokes()
+                                jokeGenerator.addJokesToCache(apiJokes)
+                                jokes.addAll(jokeGenerator.customJokesFlow.value)
+                                jokes.addAll(apiJokes)
+                                adapter.setNewData(jokes)
+                            }
+                        }
+                        catch (e: Exception) {
+                            println("Error: $e")
+                            Toast.makeText(requireActivity(), "Ошибка при загрузке данных", Toast.LENGTH_SHORT).show()
+                        }
+                        finally {
                             bindingFragmentList.progressBar.visibility = ProgressBar.GONE
                             coroutineIsRunning = false
                         }
@@ -153,6 +173,25 @@ class JokesListFragment : Fragment(R.layout.fragment_jokes_list) {
                 }
             }
         })
+    }
+
+    private suspend fun getApiJokes(): List<Joke> {
+        var apiJokes: List<Joke> = emptyList()
+        if (isInternetAvailable()) {
+            try {
+                apiJokes = jokeGenerator.getInitialApiJokes()
+            } catch (e: Exception) {
+                println("Error: $e")
+            }
+        }
+        return apiJokes
+    }
+
+    private fun clearCustomAndCachedJokes() {
+        lifecycleScope.launch {
+            jokeGenerator.clearCustomJokes()
+            jokeGenerator.clearAllCachedJokes()
+        }
     }
 }
 

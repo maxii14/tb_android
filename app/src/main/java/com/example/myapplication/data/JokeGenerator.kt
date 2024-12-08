@@ -6,6 +6,7 @@ import com.example.myapplication.data.api.RetrofitInstance
 import com.example.myapplication.data.db.AppDB
 import com.example.myapplication.data.db.repo.CachedJokesRepository
 import com.example.myapplication.data.db.repo.CustomJokesRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -113,8 +114,10 @@ object JokeGenerator : ViewModel() {
 
     fun loadAllCustomJokes() {
         viewModelScope.launch {
-            customJokesRepository.getAllJokes().collect {
-                _customJokesFlow.value = it
+            customJokesRepository.getAllJokes().collect { jokes ->
+                if (_customJokesFlow.value != jokes) {
+                    _customJokesFlow.value = jokes
+                }
             }
         }
     }
@@ -122,8 +125,11 @@ object JokeGenerator : ViewModel() {
     fun loadAllCachedJokes() {
         viewModelScope.launch {
             cachedJokesRepository.clearOldCache()
-            cachedJokesRepository.getAllCachedJokes().collect {
-                _cachedJokesFlow.value = convertToAppJokes(it)
+            cachedJokesRepository.getAllCachedJokes().collect { jokes ->
+                val convertedJokes = convertToAppJokes(jokes)
+                if (_cachedJokesFlow.value != convertedJokes) {
+                    _cachedJokesFlow.value = convertedJokes
+                }
             }
         }
     }
@@ -150,6 +156,24 @@ object JokeGenerator : ViewModel() {
                 answer = joke.answer,
                 fromApi = joke.fromApi,
             )
+        }
+    }
+
+    fun clearCustomJokes() {
+        viewModelScope.launch(Dispatchers.IO) {
+            customJokesRepository.deleteAllJokes()
+        }
+    }
+
+    fun clearAllCachedJokes() {
+        viewModelScope.launch(Dispatchers.IO) {
+            cachedJokesRepository.clearAllCache()
+        }
+    }
+
+    fun clearOldCachedJokes() {
+        viewModelScope.launch(Dispatchers.IO) {
+            cachedJokesRepository.clearOldCache()
         }
     }
 }

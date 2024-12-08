@@ -11,6 +11,10 @@ class CachedJokesRepository (private val cachedJokeDao: CachedJokeDao) {
         cachedJokeDao.insertAllToCache(jokes)
     }
 
+    suspend fun clearAllCache() {
+        cachedJokeDao.deleteOldCache(System.currentTimeMillis())
+    }
+
     suspend fun clearOldCache() {
         cachedJokeDao.deleteOldCache(System.currentTimeMillis() - 24 * 60 * 60 * 1000L)
     }
