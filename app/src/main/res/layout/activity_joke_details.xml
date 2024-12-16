@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.joke_details.JokeDetailsActivity">
+    tools:context=".presentation.joke_details.JokeDetailsActivity">
 
     <TextView
         android:id="@+id/jokeTitle"
