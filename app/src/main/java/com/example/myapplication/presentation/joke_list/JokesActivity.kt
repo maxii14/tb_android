@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.R
 import com.example.myapplication.databinding.ActivityJokesBinding
+import com.example.myapplication.presentation.App
 import com.example.myapplication.presentation.fragments.JokesListFragment
 
 class JokesActivity : AppCompatActivity() {
@@ -13,6 +14,7 @@ class JokesActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         //supportFragmentManager.fragmentFactory = CustomFragmentFactory()
+        (applicationContext as App).appComponent.inject(this)
         super.onCreate(savedInstanceState)
         //setContentView(R.layout.activity_jokes)
         binding = ActivityJokesBinding.inflate(layoutInflater)
