@@ -18,4 +18,5 @@ data class Joke (
     @SerialName("delivery")
     var answer: String,
     var fromApi: Boolean = true
+    
 )

@@ -18,6 +18,7 @@ import com.example.myapplication.domain.entity.Joke
 import com.example.myapplication.data.repository.JokeGenerator
 import com.example.myapplication.databinding.FragmentJokesListBinding
 import com.example.myapplication.presentation.joke_list.recycler.JokeAdapters.JokeAdapterForFragment
+import jakarta.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest

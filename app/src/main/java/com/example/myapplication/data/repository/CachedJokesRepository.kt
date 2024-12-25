@@ -3,9 +3,12 @@ package com.example.myapplication.data.repository
 import com.example.myapplication.domain.entity.CachedJoke
 import com.example.myapplication.data.datasource.local.CachedJokeDao
 import com.example.myapplication.domain.repository.CachedJokesRepository
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
-class CachedJokesRepository (private val cachedJokeDao: CachedJokeDao): CachedJokesRepository {
+class CachedJokesRepository @Inject constructor(
+    private val cachedJokeDao: CachedJokeDao
+): CachedJokesRepository {
     override fun getAllCachedJokes(): Flow<List<CachedJoke>> = cachedJokeDao.getAllJokesFromCache()
 
     override suspend fun addJokesToCache(jokes: List<CachedJoke>) {

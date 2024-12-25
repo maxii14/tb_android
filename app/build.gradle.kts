@@ -90,4 +90,11 @@ dependencies {
     kapt("androidx.lifecycle:lifecycle-compiler:2.8.7")
     implementation("androidx.room:room-runtime:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
+    implementation("com.google.dagger:hilt-android:2.53.1")
+    annotationProcessor("com.google.dagger:hilt-compiler:2.53.1")
+    implementation("com.google.dagger:dagger:2.53.1")
+    implementation("com.google.dagger:dagger-android:2.53.1")
+    implementation("com.google.dagger:dagger-android-support:2.53.1")
+    kapt("com.google.dagger:dagger-compiler:2.53.1")
+    kapt("com.google.dagger:dagger-android-processor:2.53.1")
 }
