@@ -7,8 +7,10 @@ import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.example.myapplication.R
 import com.example.myapplication.data.JokeGenerator
+import com.example.myapplication.data.db.AppDB
 import com.example.myapplication.databinding.ActivityJokesBinding
 import com.example.myapplication.databinding.FragmentJokesListBinding
+import com.example.myapplication.ui.App
 import com.example.myapplication.ui.fragments.FViewModel
 import com.example.myapplication.ui.fragments.JokesListFragment
 
